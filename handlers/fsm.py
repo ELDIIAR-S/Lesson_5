@@ -15,14 +15,9 @@ from database.main_db import (
 )
 
 
-
 router = Router()
 
-
-
-# ==========================
 # Состояния анкеты
-# ==========================
 
 class ProductForm(StatesGroup):
 
@@ -37,10 +32,7 @@ class ProductForm(StatesGroup):
     description = State()
 
 
-
-# ==========================
 # Запуск анкеты
-# ==========================
 
 @router.message(Command("form"))
 async def start_form(
@@ -59,9 +51,7 @@ async def start_form(
 
 
 
-# ==========================
 # Артикул
-# ==========================
 
 @router.message(ProductForm.article)
 async def get_article(
@@ -95,9 +85,7 @@ async def get_article(
 
 
 
-# ==========================
 # Название
-# ==========================
 
 @router.message(ProductForm.name)
 async def get_name(
@@ -121,9 +109,7 @@ async def get_name(
 
 
 
-# ==========================
 # Цена
-# ==========================
 
 @router.message(ProductForm.price)
 async def get_price(
@@ -156,10 +142,7 @@ async def get_price(
     )
 
 
-
-# ==========================
 # Категория
-# ==========================
 
 @router.message(ProductForm.category)
 async def get_category(
@@ -183,11 +166,9 @@ async def get_category(
 
 
 
-# ==========================
 # Описание
 # Последний шаг
 # Сохранение в две таблицы
-# ==========================
 
 @router.message(ProductForm.description)
 async def get_description(
@@ -216,9 +197,9 @@ async def get_description(
 
 
 
-    # =================================
-    # Запись в первую таблицу products
-    # =================================
+
+# Запись в первую таблицу products
+
 
     await add_product(
         article,
@@ -228,13 +209,10 @@ async def get_description(
 
 
 
-    # =================================
-    # Запись во вторую таблицу product_info
-    #
-    # article одинаковый в обеих таблицах
-    # для INNER JOIN
-    # =================================
-
+# Запись во вторую таблицу product_info
+# article одинаковый в обеих таблицах
+# для INNER JOIN
+  
     await add_product_info(
         article,
         category,
