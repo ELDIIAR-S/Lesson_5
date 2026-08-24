@@ -2,12 +2,11 @@ import asyncio
 
 from aiogram import Bot, Dispatcher
 
+from config import BOT_TOKEN
+
 from database.main_db import create_table
 
 from handlers.fsm import router
-
-
-from config import BOT_TOKEN
 
 
 
@@ -24,8 +23,8 @@ async def main():
     dp.include_router(router)
 
 
-    # создание таблиц при запуск
-    create_table()
+    # создаём таблицы
+    await create_table()
 
 
     await dp.start_polling(bot)

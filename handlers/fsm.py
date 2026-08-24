@@ -1,206 +1,276 @@
-from aiogram import Router, F
+from aiogram import Router
+
 from aiogram.types import Message
+
 from aiogram.filters import Command
 
-from aiogram.fsm.state import StatesGroup, State
 from aiogram.fsm.context import FSMContext
+
+from aiogram.fsm.state import StatesGroup, State
 
 
 from database.main_db import (
-    add_film,
-    add_film_info,
-    get_films
+    add_product,
+    add_product_info
 )
+
 
 
 router = Router()
 
 
 
-class FilmForm(StatesGroup):
+# ==========================
+# Состояния анкеты
+# ==========================
 
-    title = State()
-    genre = State()
-    rating = State()
+class ProductForm(StatesGroup):
 
-    year = State()
-    country = State()
+    article = State()
+
+    name = State()
+
+    price = State()
+
+    category = State()
+
+    description = State()
 
 
+
+# ==========================
+# Запуск анкеты
+# ==========================
 
 @router.message(Command("form"))
-async def start_form(message: Message, state: FSMContext):
-
-    await state.set_state(FilmForm.title)
-
-    await message.answer(
-        "Введите название фильма:"
-    )
-
-
-
-@router.message(FilmForm.title)
-async def get_title(message: Message, state: FSMContext):
-
-    await state.update_data(
-        title=message.text
-    )
+async def start_form(
+        message: Message,
+        state: FSMContext
+):
 
     await state.set_state(
-        FilmForm.genre
+        ProductForm.article
     )
+
 
     await message.answer(
-        "Введите жанр:"
+        "Введите артикул товара:"
     )
 
 
 
-@router.message(FilmForm.genre)
-async def get_genre(message: Message, state: FSMContext):
+# ==========================
+# Артикул
+# ==========================
 
-    await state.update_data(
-        genre=message.text
-    )
-
-    await state.set_state(
-        FilmForm.rating
-    )
-
-    await message.answer(
-        "Введите оценку от 1 до 10:"
-    )
-
-
-
-@router.message(FilmForm.rating)
-async def get_rating(message: Message, state:FSMContext):
+@router.message(ProductForm.article)
+async def get_article(
+        message: Message,
+        state: FSMContext
+):
 
     if not message.text.isdigit():
 
         await message.answer(
-            "Оценка должна быть числом"
+            "Артикул должен быть числом"
         )
 
         return
 
 
+
     await state.update_data(
-        rating=int(message.text)
+        article=int(message.text)
     )
 
 
     await state.set_state(
-        FilmForm.year
+        ProductForm.name
     )
 
 
     await message.answer(
-        "Введите год выпуска:"
+        "Введите название товара:"
     )
 
 
 
-@router.message(FilmForm.year)
-async def get_year(message: Message, state:FSMContext):
+# ==========================
+# Название
+# ==========================
+
+@router.message(ProductForm.name)
+async def get_name(
+        message: Message,
+        state: FSMContext
+):
+
+    await state.update_data(
+        name=message.text
+    )
+
+
+    await state.set_state(
+        ProductForm.price
+    )
+
+
+    await message.answer(
+        "Введите цену товара:"
+    )
+
+
+
+# ==========================
+# Цена
+# ==========================
+
+@router.message(ProductForm.price)
+async def get_price(
+        message: Message,
+        state: FSMContext
+):
 
     if not message.text.isdigit():
 
         await message.answer(
-            "Введите число"
+            "Цена должна быть числом"
         )
 
         return
 
 
+
     await state.update_data(
-        year=int(message.text)
+        price=int(message.text)
     )
 
 
     await state.set_state(
-        FilmForm.country
+        ProductForm.category
     )
 
 
     await message.answer(
-        "Введите страну:"
+        "Введите категорию товара:"
     )
 
 
 
-@router.message(FilmForm.country)
-async def get_country(message: Message, state:FSMContext):
+# ==========================
+# Категория
+# ==========================
+
+@router.message(ProductForm.category)
+async def get_category(
+        message: Message,
+        state: FSMContext
+):
 
     await state.update_data(
-        country=message.text
+        category=message.text
+    )
+
+
+    await state.set_state(
+        ProductForm.description
+    )
+
+
+    await message.answer(
+        "Введите описание товара:"
+    )
+
+
+
+# ==========================
+# Описание
+# Последний шаг
+# Сохранение в две таблицы
+# ==========================
+
+@router.message(ProductForm.description)
+async def get_description(
+        message: Message,
+        state: FSMContext
+):
+
+    await state.update_data(
+        description=message.text
     )
 
 
     data = await state.get_data()
 
 
-    # первая таблица
-    film_id = add_film(
-        data["title"],
-        data["genre"],
-        data["rating"]
+
+    article = data["article"]
+
+    name = data["name"]
+
+    price = data["price"]
+
+    category = data["category"]
+
+    description = data["description"]
+
+
+
+    # =================================
+    # Запись в первую таблицу products
+    # =================================
+
+    await add_product(
+        article,
+        name,
+        price
     )
 
 
-    # вторая таблица
-    # общий ключ film_id записывается сюда
-    add_film_info(
-        film_id,
-        data["year"],
-        data["country"]
+
+    # =================================
+    # Запись во вторую таблицу product_info
+    #
+    # article одинаковый в обеих таблицах
+    # для INNER JOIN
+    # =================================
+
+    await add_product_info(
+        article,
+        category,
+        description
     )
+
 
 
     await message.answer(
         f"""
-Фильм добавлен:
+ Товар добавлен
 
-Название: {data['title']}
-Жанр: {data['genre']}
-Оценка: {data['rating']}
-Год: {data['year']}
-Страна: {data['country']}
-        """
+
+ Артикул:
+{article}
+
+
+ Название:
+{name}
+
+
+ Цена:
+{price} ₽
+
+
+ Категория:
+{category}
+
+
+ Описание:
+{description}
+"""
     )
 
 
+
+    # очищаем FSM
+
     await state.clear()
-
-
-
-@router.message(Command("films"))
-async def show_films(message: Message):
-
-    films = get_films()
-
-
-    if not films:
-
-        await message.answer(
-            "Фильмов нет"
-        )
-
-        return
-
-
-    text = "Список фильмов:\n\n"
-
-
-    for film in films:
-
-        text += (
-            f" {film[1]}\n"
-            f"Жанр: {film[2]}\n"
-            f"Оценка: {film[3]}\n"
-            f"Год: {film[4]}\n"
-            f"Страна: {film[5]}\n\n"
-        )
-
-
-    await message.answer(text)

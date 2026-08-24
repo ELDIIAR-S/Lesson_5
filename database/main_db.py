@@ -1,82 +1,118 @@
 import sqlite3
 
+
 from database.queries import (
-    CREATE_FILMS_TABLE,
-    CREATE_FILM_INFO_TABLE,
-    INSERT_FILM,
-    INSERT_FILM_INFO,
-    GET_FILMS_JOIN
+    CREATE_PRODUCTS_TABLE,
+    CREATE_PRODUCT_INFO_TABLE,
+
+    INSERT_PRODUCT,
+    INSERT_PRODUCT_INFO,
+
+    GET_PRODUCTS_JOIN
 )
+
 
 
 DB_NAME = "bot.db"
 
+# создание таблиц
 
-def connect_db():
-    return sqlite3.connect(DB_NAME)
+async def create_table():
 
+    db = sqlite3.connect(DB_NAME)
 
-
-def create_table():
-
-    db = connect_db()
     cursor = db.cursor()
 
-    cursor.execute(CREATE_FILMS_TABLE)
-    cursor.execute(CREATE_FILM_INFO_TABLE)
-
-    db.commit()
-    db.close()
-
-
-
-def add_film(title, genre, rating):
-
-    db = connect_db()
-    cursor = db.cursor()
 
     cursor.execute(
-        INSERT_FILM,
-        (title, genre, rating)
+        CREATE_PRODUCTS_TABLE
     )
 
-    film_id = cursor.lastrowid
-
-    db.commit()
-    db.close()
-
-    return film_id
-
-
-
-def add_film_info(film_id, year, country):
-
-    db = connect_db()
-    cursor = db.cursor()
 
     cursor.execute(
-        INSERT_FILM_INFO,
+        CREATE_PRODUCT_INFO_TABLE
+    )
+
+
+    db.commit()
+
+    db.close()
+
+
+# добавление товара
+
+async def add_product(
+        article,
+        name,
+        price
+):
+
+    db = sqlite3.connect(DB_NAME)
+
+    cursor = db.cursor()
+
+
+    cursor.execute(
+        INSERT_PRODUCT,
         (
-            film_id,
-            year,
-            country
+            article,
+            name,
+            price
         )
     )
 
+
     db.commit()
+
     db.close()
 
 
+# добавление информации товара
 
-def get_films():
+async def add_product_info(
+        article,
+        category,
+        description
+):
 
-    db = connect_db()
+    db = sqlite3.connect(DB_NAME)
+
     cursor = db.cursor()
 
-    cursor.execute(GET_FILMS_JOIN)
 
-    films = cursor.fetchall()
+    cursor.execute(
+        INSERT_PRODUCT_INFO,
+        (
+            article,
+            category,
+            description
+        )
+    )
+
+
+    db.commit()
 
     db.close()
 
-    return films
+
+# получение товаров через INNER JOIN
+
+async def get_products():
+
+    db = sqlite3.connect(DB_NAME)
+
+    cursor = db.cursor()
+
+
+    cursor.execute(
+        GET_PRODUCTS_JOIN
+    )
+
+
+    products = cursor.fetchall()
+
+
+    db.close()
+
+
+    return products
